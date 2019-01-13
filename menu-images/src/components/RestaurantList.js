@@ -22,7 +22,7 @@ class RestaurantList extends Component {
         <ListContainer>
           <List>
             {this.props.restaurants.map((restaurant, i) => 
-              <ListItem key={Math.random() * i} onClick={this.props.clickHandler}>{restaurant.name}</ListItem>)
+              <ListItem key={restaurant.id} onClick={this.props.clickHandler}>{restaurant.name}</ListItem>)
             }
           </List>
         </ListContainer>

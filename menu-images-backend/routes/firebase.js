@@ -17,13 +17,16 @@ var database = firebaseApp.database();
 router.get('/', function(req, res, next) {
   const { restaurantId } = req.query;
   const restaurantRef = database.ref(`restaurants/${restaurantId}`);
-  console.log(restaurantRef)
   restaurantRef.once('value').then(function(snapshot) {
-    res.json(snapshot)
+    const keys = Object.keys(snapshot.val().menu);
+    const values = Object.values(snapshot.val().menu);
+    const formattedSnapshot = keys.map((key, i) => ({ id: key, ...values[i] }));
+    res.json(formattedSnapshot);
   })
   .catch(err => res.json(err))
 });
 
+/* Add new items to restaurants */
 router.post('/add-item', function(req, res, next) {
   const { restaurantId, restaurantName, name, ingredients, price, rating, accuracy } = req.query;
   const restaurantRef = database.ref(`restaurants/${restaurantId}/menu`);

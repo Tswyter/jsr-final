@@ -10,6 +10,19 @@ const Form = styled.form`
   flex-direction: column;
 `;
 
+const Button = styled.button`
+  width: 100%;
+  background: none;
+  border: 3px dashed #efefef;
+  padding: 1rem;
+  text-align: center;
+  border-radius: 10%;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-size: 1.3rem;
+  color: #aaa;
+`;
+
 class AddItem extends Component {
   state = {
     open: false,
@@ -38,7 +51,6 @@ class AddItem extends Component {
       .filter(element => 
         element.type !== 'submit' && element.value)
       .map((element, i) => `${i !== 0 ? '&' : ''}${element.name}=${urlencode(element.value)}`).join('');
-    console.log(query);
     fetch(`http://localhost:3001/firebase/add-item?${query}`, {
       method: 'POST',
       header: {
@@ -47,6 +59,7 @@ class AddItem extends Component {
       }
     }).then(res => res.json().then(resp => {
       console.log('success', resp);
+      e.target.reset();
       this.props.handleNewItems(resp.query);
       this.toggleModal();
     }))
@@ -56,7 +69,7 @@ class AddItem extends Component {
   render() {
     return (
       <>
-        <button onClick={this.toggleModal}>{this.props.children}</button>
+        <Button onClick={this.toggleModal}>{this.props.children}</Button>
         <Modal open={this.state.open} toggle={this.toggleModal}>
           <h2>Add a menu item for {this.props.restaurant.name}</h2>
           <Form onSubmit={e => this.processForm(e)}>
@@ -64,7 +77,7 @@ class AddItem extends Component {
             <Input name="ingredients" type="text" placeholder="Item Ingredients" value={this.state.ingredients} changeWatcher={(e) => this.watchInputs(e)} />
             <Input name="price" type="text" placeholder="price" value={this.state.price} changeWatcher={(e) => this.watchInputs(e)} />
             <Input name="rating" type="text" placeholder="rating" value={this.state.rating} changeWatcher={(e) => this.watchInputs(e)} />
-            <Input name="accuracy" type="text" placeholder="accuracy" value={this.state.accuracy} value={this.state.accuracy} changeWatcher={(e) => this.watchInputs(e)} hidden />
+            <Input name="accuracy" type="text" placeholder="accuracy" value={this.state.accuracy} changeWatcher={(e) => this.watchInputs(e)} hidden />
             <Input name="restaurantId" type="text" value={this.props.restaurant.id} changeWatcher={(e) => this.watchInputs(e)} hidden />
             <Input name="restaurantName" type="text" value={this.props.restaurant.name} changeWatcher={(e) => this.watchInputs(e)} hidden /> 
             <Input name="image" type="file" placeholder="Add an image" changeWatcher={(e) => this.watchInputs(e)} />

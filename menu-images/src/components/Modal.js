@@ -10,7 +10,7 @@ const Container = styled.div`
 const Content = styled.div`
   background-color: #FFF;
   padding: 1rem;
-  position: relative;
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translateX(-50%) translateY(-50%);

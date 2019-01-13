@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import urlencode from 'urlencode';
 import Header from './components/Header';
 import RestaurantList from './components/RestaurantList';
 import RestaurantMenu from './components/RestaurantMenu';
@@ -35,7 +36,7 @@ const coordinates = new Promise((resolve, reject) => {
 class App extends Component {
   state = {
     restaurants: [],
-    selectedRestaurant: []
+    selectedRestaurant: {}
   }
 
   componentWillMount() {
@@ -55,6 +56,18 @@ class App extends Component {
   selectRestaurant = (e) => {
     const selectedRestaurant = this.state.restaurants.find(restaurant => restaurant.name === e.target.innerText);
     this.setState({ selectedRestaurant });
+    fetch(`http://localhost:3001/firebase?restaurantId=${this.state.selectedRestaurant.id}&restaurantName=${urlencode(this.state.selectedRestaurant.name)}`)
+      .then(res => res.json())
+      .then(res => {
+        console.log('selectRestaurant', res);
+        // const menuItems = Object.values(res.menu);
+        // const images = menuItems.map(item => item.images);
+        // menuItems[this.props.restaurant.id].images = images;
+        // console.log('images',menuItems)
+        this.setState({ items: res });
+      })
+      .catch(err => console.error(err));
+
   }
 
   searchValue = (e) => {
@@ -81,7 +94,7 @@ class App extends Component {
             <RestaurantList restaurants={this.state.restaurants} clickHandler={(e) => this.selectRestaurant(e)}/>
           </Sidebar>
           <MenuContainer>
-            <RestaurantMenu restaurant={this.state.selectedRestaurant} />
+            <RestaurantMenu restaurant={this.state.selectedRestaurant} items={this.state.items} />
           </MenuContainer>
         </ContentArea>
       </div>

@@ -25,24 +25,26 @@ class RestaurantMenu extends Component {
     items: []
   };
 
-  componentWillMount() {
-    // get items from firebase database for specific restaurant
-    // add items to states
+  componentWillReceiveProps() {
     fetch(`http://localhost:3001/firebase?restaurantId=${this.props.restaurant.id}&restaurantName=${urlencode(this.props.restaurant.name)}`)
       .then(res => res.json())
       .then(res => {
-        console.log(res);
-        const menuItems = Object.values(res.menu);
-        const images = menuItems.map(item => item.images);
-        menuItems[this.props.restaurant.id].images = images;
-        console.log('images',menuItems)
-        this.setState({ items: menuItems })
+        console.log('cwrp', res);
+        // const menuItems = Object.values(res.menu);
+        // const images = menuItems.map(item => item.images);
+        // menuItems[this.props.restaurant.id].images = images;
+        // console.log('images',menuItems)
+        this.setState({ items: res });
       })
       .catch(err => console.error(err));
   }
 
   renderNewItem = (item) => {
-    this.setState({ items: [...this.state.items, item]});
+    if (this.state.items.length > 0) {
+      this.setState({ items: [...this.state.items, item]});
+    } else {
+      this.setState({ items: item })
+    }
   }
   
   render() {
@@ -59,7 +61,7 @@ class RestaurantMenu extends Component {
           <Menu>
             {items.length > 0 
               && items.map(item =>
-                <MenuItem key={`menuItem-${Math.random() * 100}`} item={item}></MenuItem>)}
+                <MenuItem key={item.id} item={item}></MenuItem>)}
               <AddItem restaurant={restaurant} handleNewItems={this.renderNewItem}>Add an Item</AddItem>
           </Menu>
         </MenuContainer>

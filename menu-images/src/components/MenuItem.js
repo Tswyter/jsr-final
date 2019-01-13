@@ -17,6 +17,9 @@ const ItemContent = styled.div`
 
 const ContentSidebar = styled.div`
   min-width: 20%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 `;
 
 const ContentImageGrid = styled.div`
@@ -25,7 +28,7 @@ const ContentImageGrid = styled.div`
 `;
 
 const Availability = styled.div`
-  background: ${({ available }) => available ? 'green' : 'red'};
+  text-align: right;
 `;
 
 const ItemImage = styled.div`
@@ -47,6 +50,10 @@ class MenuItem extends Component {
     this.setState({ open: this.state.open ? false : true })
   }
 
+  toggleSuggestionModal = () => {
+
+  }
+
   render() {
     const { item } = this.props
     return(
@@ -57,14 +64,19 @@ class MenuItem extends Component {
             <p>{item.ingredients}</p>
           </div>
           <div>
-            <h3>{item.price}</h3>
-            <p>{item.rating}</p>
+            <h3>${item.price}</h3>
+            <p>{item.rating} stars</p>
           </div>
         </ItemHeader>
         <ItemContent show={this.state.open}>
           <ContentSidebar>
+            <div>
+              <p>Would you like to add your own image?</p>
+              <input type="file" name="image" placeholder="Add an image" />
+            </div>
             <Availability available={item.availability}>
-              {item.availability ? 'yes' : 'no'}
+              <p>Is this listing accurate?</p>
+              <button>Yes</button><button onClick={this.toggleSuggestionModal}>No</button>
             </Availability>
           </ContentSidebar>
           <ContentImageGrid>
