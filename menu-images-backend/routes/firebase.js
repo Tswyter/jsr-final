@@ -1,8 +1,23 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-var firebase = require('firebase');
-var firebaseApp = firebase.initializeApp({
+const Multer = require('multer');
+const googleStorage = require('@google-cloud/storage');
+const storage = googleStorage({
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  keyFileName: process.env.GCLOUD_STORAGE_KEY
+});
+const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
+
+const multer = Multer({
+  storage: Multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+});
+
+const firebase = require('firebase');
+const firebaseApp = firebase.initializeApp({
   apiKey: process.env.FIREBASE_API_KEY,
   authDomain: process.env.FIREBASE_AUTH_DOMAIN,
   databaseURL: process.env.FIREBASE_DATABASE_URL,
@@ -11,7 +26,7 @@ var firebaseApp = firebase.initializeApp({
   messagingSenderId: process.env.FIREBASE_MESSAGE_SENDER_ID
 });
 
-var database = firebaseApp.database();
+const database = firebaseApp.database();
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -49,5 +64,49 @@ router.post('/add-item', function(req, res, next) {
   // if not, add restaurant details from yelp w/ menu item
   // if so, append a new menu item to existing restaurant
 });
+
+
+app.post('/image-upload', multer.single('file'), (req,res) => {
+  let file = req.file;
+  if (file) {
+    uploadImageToStorage(file).then((success) => {
+      res.status(200).send({
+        status: 'success',
+        url: success
+      })
+    }).catch(err => console.error(err));
+  }
+});
+
+const uploadImageToStorage = (file) => {
+  let promise = new Promise((resolve, reject) => {
+    if (!file) {
+      reject('No image file!');
+    }
+
+    let newFileName = `${file.originalname}_${Date.now()}`;
+
+    let fileUpload = bucket.file(newFileName);
+
+    const blobStream = fileUpload.createWriteStream({
+      metadata: {
+        contentType: file.mimetype
+      }
+    });
+
+    blobStream.on('error', (error) => {
+      reject('Something is wrong! Unable to upload at the moment.');
+    });
+
+    blobStream.on('finish', () => {
+      const url = format(`https://storage.googleapis.com/${bucket.name}/${fileUPload.name}`);
+      resolve(url);
+    });
+
+    blobStream.end(file.buffer);
+  });
+
+  return promise;
+}
 
 module.exports = router;

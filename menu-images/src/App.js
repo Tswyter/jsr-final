@@ -59,7 +59,6 @@ class App extends Component {
     fetch(`http://localhost:3001/firebase?restaurantId=${this.state.selectedRestaurant.id}&restaurantName=${urlencode(this.state.selectedRestaurant.name)}`)
       .then(res => res.json())
       .then(res => {
-        console.log('selectRestaurant', res);
         // const menuItems = Object.values(res.menu);
         // const images = menuItems.map(item => item.images);
         // menuItems[this.props.restaurant.id].images = images;
@@ -67,7 +66,6 @@ class App extends Component {
         this.setState({ items: res });
       })
       .catch(err => console.error(err));
-
   }
 
   searchValue = (e) => {
@@ -88,9 +86,9 @@ class App extends Component {
         <Header></Header>
         <ContentArea>
           <Sidebar>
-            <div>
+            <>
               <Input name="restaurantSearchTerm" type="text" placeholder="Search Restaurants" value={this.state.restaurantSearchTerm} changeWatcher={this.searchValue} />
-            </div>
+            </>
             <RestaurantList restaurants={this.state.restaurants} clickHandler={(e) => this.selectRestaurant(e)}/>
           </Sidebar>
           <MenuContainer>

@@ -29,7 +29,6 @@ class RestaurantMenu extends Component {
     fetch(`http://localhost:3001/firebase?restaurantId=${this.props.restaurant.id}&restaurantName=${urlencode(this.props.restaurant.name)}`)
       .then(res => res.json())
       .then(res => {
-        console.log('cwrp', res);
         // const menuItems = Object.values(res.menu);
         // const images = menuItems.map(item => item.images);
         // menuItems[this.props.restaurant.id].images = images;

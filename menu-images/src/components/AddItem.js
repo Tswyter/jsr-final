@@ -3,6 +3,7 @@ import urlencode from 'urlencode';
 import styled from 'styled-components';
 import Modal from './Modal';
 import Input from './Input';
+import ImageUploader from './ImageUploader';
 // componente makes a button that opens a modal when clicked.
 
 const Form = styled.form`
@@ -16,7 +17,6 @@ const Button = styled.button`
   border: 3px dashed #efefef;
   padding: 1rem;
   text-align: center;
-  border-radius: 10%;
   cursor: pointer;
   margin-top: 1rem;
   font-size: 1.3rem;
@@ -59,12 +59,13 @@ class AddItem extends Component {
       }
     }).then(res => res.json().then(resp => {
       console.log('success', resp);
-      e.target.reset();
       this.props.handleNewItems(resp.query);
       this.toggleModal();
     }))
     .catch(err => console.log('err', err));
   }
+
+  // create ImageUploader component that handles uploading images to storage and passing the URL back to a function here, to be set in state and used when form is submitted.
 
   render() {
     return (
@@ -80,7 +81,8 @@ class AddItem extends Component {
             <Input name="accuracy" type="text" placeholder="accuracy" value={this.state.accuracy} changeWatcher={(e) => this.watchInputs(e)} hidden />
             <Input name="restaurantId" type="text" value={this.props.restaurant.id} changeWatcher={(e) => this.watchInputs(e)} hidden />
             <Input name="restaurantName" type="text" value={this.props.restaurant.name} changeWatcher={(e) => this.watchInputs(e)} hidden /> 
-            <Input name="image" type="file" placeholder="Add an image" changeWatcher={(e) => this.watchInputs(e)} />
+            <Input name="image" type="file" placeholder="Add an image" changeWatcher={(e) => this.watchInputs(e)} accept="image/*" />
+            <ImageUploader />
             <Input type="submit" value="Submit" />
           </Form>
         </Modal>

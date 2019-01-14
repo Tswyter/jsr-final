@@ -6,6 +6,7 @@ const ItemContainer = styled.div``;
 const ItemHeader = styled.div`
   display: flex;
   justify-content: space-between;
+  cursor: pointer;
   p {
     font-size: 0.75rem;
   }
