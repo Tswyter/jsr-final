@@ -1,20 +1,10 @@
 const express = require('express');
 const router = express.Router();
-
-const Multer = require('multer');
-const googleStorage = require('@google-cloud/storage');
-const storage = googleStorage({
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  keyFileName: process.env.GCLOUD_STORAGE_KEY
-});
-const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET);
-
-const multer = Multer({
-  storage: Multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024
-  }
-});
+const fetch = require('node-fetch');
+const multer = require('multer');
+const upload = multer(({ dest: 'uploads/'}));
+const unirest = require('unirest');
+const base64Img = require('base64-img');
 
 const firebase = require('firebase');
 const firebaseApp = firebase.initializeApp({
@@ -43,70 +33,69 @@ router.get('/', function(req, res, next) {
 
 /* Add new items to restaurants */
 router.post('/add-item', function(req, res, next) {
-  const { restaurantId, restaurantName, name, ingredients, price, rating, accuracy } = req.query;
+  const { restaurantId, restaurantName, name, ingredients, price, rating, accuracy, image } = req.query;
   const restaurantRef = database.ref(`restaurants/${restaurantId}/menu`);
-  restaurantRef.push({
+  const sendImage = image.find(img => img.indexOf('cdn2.hubspot.net') > -1);
+  const key = restaurantRef.push({
     name,
     ingredients,
     price,
     rating,
-    accuracy
+    accuracy,
+    image
+  }, (error) => {
+    if (error) {
+      res.send({ status: 'error', error });
+    } else {
+      console.log({ status: 'success', query: req.query });
+    }
+  }).key;
+  const itemRef = database.ref(`restaurants/${restaurantId}/menu/${key}/images`);
+  itemRef.push({
+    src: sendImage,
+    alt: ''
   }, (error) => {
     if (error) {
       res.send({ status: 'error', error });
     } else {
       res.send({ status: 'success', query: req.query });
     }
-  });
-
-  
-  // check if restaurant exists in database
-  // if not, add restaurant details from yelp w/ menu item
-  // if so, append a new menu item to existing restaurant
+  })
 });
 
 
-app.post('/image-upload', multer.single('file'), (req,res) => {
-  let file = req.file;
-  if (file) {
-    uploadImageToStorage(file).then((success) => {
-      res.status(200).send({
-        status: 'success',
-        url: success
+router.post('/image-upload', (req,res) => {
+  base64Img.img(req.body.file, 'uploads', req.body.fileName, (err, filepath) => {
+    if (!err) {
+      unirest.post(`http://api.hubapi.com/filemanager/api/v2/files?hapikey=${process.env.HUBSPOT_API}`)
+      .headers({
+        'Authorization': `Bearer ${process.env.HUBSPOT_API}`,
+        'Content-Type': 'multipart/form-data'
       })
-    }).catch(err => console.error(err));
-  }
+      .attach('file', filepath)
+      .end((response) => {
+        console.log(response.body);
+        res.json({ success: 'Success!', imagePath: response.body.objects[0].url });
+      });
+    } else {
+      res.send({ error: 'Ooops, looks like there was an error with the image...' })
+    }
+  });
 });
 
-const uploadImageToStorage = (file) => {
-  let promise = new Promise((resolve, reject) => {
-    if (!file) {
-      reject('No image file!');
+router.post('/update-item', (req, res) => {
+  const { restaurantId, menuItemId, filePath } = req.query;
+  const menuItemImagesRef = database.ref(`restaurants/${restaurantId}/menu/${menuItemId}/images`);
+  menuItemImagesRef.push({
+    src: filePath,
+    alt: ''
+  }, (error) => {
+    if (error) {
+      res.send({ status: 'error', error });
+    } else {
+      res.send({ status: 'success', query: req.query, body: req.body });
     }
-
-    let newFileName = `${file.originalname}_${Date.now()}`;
-
-    let fileUpload = bucket.file(newFileName);
-
-    const blobStream = fileUpload.createWriteStream({
-      metadata: {
-        contentType: file.mimetype
-      }
-    });
-
-    blobStream.on('error', (error) => {
-      reject('Something is wrong! Unable to upload at the moment.');
-    });
-
-    blobStream.on('finish', () => {
-      const url = format(`https://storage.googleapis.com/${bucket.name}/${fileUPload.name}`);
-      resolve(url);
-    });
-
-    blobStream.end(file.buffer);
-  });
-
-  return promise;
-}
+  })
+});
 
 module.exports = router;

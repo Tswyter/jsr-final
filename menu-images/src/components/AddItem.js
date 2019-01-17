@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Modal from './Modal';
 import Input from './Input';
 import ImageUploader from './ImageUploader';
+import MenuImage from './MenuImage';
 // componente makes a button that opens a modal when clicked.
 
 const Form = styled.form`
@@ -47,10 +48,11 @@ class AddItem extends Component {
 
   processForm = (e) => {
     e.preventDefault();
-    const query = [].slice.call(e.target.elements)
+    let query = [].slice.call(e.target.elements)
       .filter(element => 
         element.type !== 'submit' && element.value)
       .map((element, i) => `${i !== 0 ? '&' : ''}${element.name}=${urlencode(element.value)}`).join('');
+    query = this.state.uploadedImage ? `${query}&image=${this.state.uploadedImage}` : query;
     fetch(`http://localhost:3001/firebase/add-item?${query}`, {
       method: 'POST',
       header: {
@@ -63,6 +65,13 @@ class AddItem extends Component {
       this.toggleModal();
     }))
     .catch(err => console.log('err', err));
+  }
+
+  handleImageUpload = (filePath) => {
+    console.log(filePath);
+    this.setState({
+      uploadedImage: filePath
+    });
   }
 
   // create ImageUploader component that handles uploading images to storage and passing the URL back to a function here, to be set in state and used when form is submitted.
@@ -80,9 +89,9 @@ class AddItem extends Component {
             <Input name="rating" type="text" placeholder="rating" value={this.state.rating} changeWatcher={(e) => this.watchInputs(e)} />
             <Input name="accuracy" type="text" placeholder="accuracy" value={this.state.accuracy} changeWatcher={(e) => this.watchInputs(e)} hidden />
             <Input name="restaurantId" type="text" value={this.props.restaurant.id} changeWatcher={(e) => this.watchInputs(e)} hidden />
-            <Input name="restaurantName" type="text" value={this.props.restaurant.name} changeWatcher={(e) => this.watchInputs(e)} hidden /> 
-            <Input name="image" type="file" placeholder="Add an image" changeWatcher={(e) => this.watchInputs(e)} accept="image/*" />
-            <ImageUploader />
+            <Input name="restaurantName" type="text" value={this.props.restaurant.name} changeWatcher={(e) => this.watchInputs(e)} hidden />
+            {this.state.uploadedImage && <MenuImage image={{ src: this.state.uploadedImage, alt: this.state.name }} />}
+            <ImageUploader handleImage={this.handleImageUpload} />
             <Input type="submit" value="Submit" />
           </Form>
         </Modal>

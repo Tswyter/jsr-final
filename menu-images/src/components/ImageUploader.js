@@ -6,8 +6,8 @@ const Container = styled.div`
   width: 100px;
   height: 100px;
   text-align: center;
-  margin: 1rem 1rem 1rem 0;
   background: #fff;
+  margin: 1rem 1rem 1rem 0;
   position: relative;
 `;
 
@@ -30,12 +30,36 @@ const Text = styled.p`
 
 class ImageUploader extends Component {
   state = {
-
+    background: ''
   }
 
   uploadImage = (e) => {
-    console.log(e.target.files);
-    // send to localhost:3001/firebase/upload-image
+    const reader = new FileReader();
+    const file = e.target.files[0];
+    
+    reader.onloadend = () => {
+      this.setState({
+        file: file,
+        background: reader.result
+      });
+
+      fetch(`http://localhost:3001/firebase/image-upload`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          file: this.state.background,
+          fileName: file.name.split('.')[0]
+        })
+      })
+      .then(res => res.json())
+      .then(res => this.props.handleImage(res.imagePath))
+      .catch(err => console.error('err', err.message));
+    };
+
+    reader.readAsDataURL(file);
+    // send to localhost:3001/firebase/image-upload
     // should be req.file there (not sure how to do that yet. May need to send as multipart/form-data)
   }
 
@@ -43,7 +67,7 @@ class ImageUploader extends Component {
     return (
       <Container>
         <Text>Upload an Image</Text>
-        <FileInput type="file" accept="images/*" onChange={(e) => this.uploadImage(e)} />
+        <FileInput name="image" type="file" accept="images/*" onChange={(e) => this.uploadImage(e)} />
       </Container>
     )
   }

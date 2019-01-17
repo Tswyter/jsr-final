@@ -60,7 +60,7 @@ class RestaurantMenu extends Component {
           <Menu>
             {items.length > 0 
               && items.map(item =>
-                <MenuItem key={item.id} item={item}></MenuItem>)}
+                <MenuItem key={item.id} item={item} restaurant={this.props.restaurant.id}></MenuItem>)}
               <AddItem restaurant={restaurant} handleNewItems={this.renderNewItem}>Add an Item</AddItem>
           </Menu>
         </MenuContainer>

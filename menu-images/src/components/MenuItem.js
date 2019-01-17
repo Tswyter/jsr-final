@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import ImageUploader from './ImageUploader';
+import MenuImage from './MenuImage';
 
 const ItemContainer = styled.div``;
 
@@ -14,9 +16,11 @@ const ItemHeader = styled.div`
 
 const ItemContent = styled.div`
   display: ${({ show }) => show ? `block` : `none`};
+  background-image: linear-gradient(#fff, #efefef);
+  padding: 1rem;
 `;
 
-const ContentSidebar = styled.div`
+const ContentController = styled.div`
   min-width: 20%;
   display: flex;
   flex-direction: row;
@@ -32,16 +36,6 @@ const Availability = styled.div`
   text-align: right;
 `;
 
-const ItemImage = styled.div`
-  height: 100px;
-  width: 100px;
-  overflow: hidden;
-  margin: 0 1rem 1rem 0;
-  img {
-    max-height: 100%;
-  }
-`;
-
 class MenuItem extends Component {
   state = {
     open: false
@@ -51,12 +45,42 @@ class MenuItem extends Component {
     this.setState({ open: this.state.open ? false : true })
   }
 
+  componentDidMount() {
+    const { item: { images } } = this.props
+    if (typeof images !== 'undefined') {
+      const ids = Object.keys(images);
+      const values = Object.values(images);
+      const imageObjects = ids.map((id, i) => ({ id, ...values[i] }));
+      this.setState({ 
+        images: imageObjects
+      })
+    }
+  }
+
   toggleSuggestionModal = () => {
 
   }
 
+  handleImage = (e) => {
+    console.log(e);
+    const images = this.state.images && this.state.images.length > 0 ? [...this.state.images, { id: 'something', src: e, alt: 'something' }] : [{ id: 'something', src: e, alt: 'something' }];
+    this.setState({
+      images
+    });
+    fetch(`http://localhost:3001/firebase/update-item?restaurantId=${this.props.restaurant}&menuItemId=${this.props.item.id}&filePath=${e}`, {
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json'
+      }
+    })
+    // .then(res => res.json())
+    .then(res => console.log(res))
+    .catch(err => console.error(err));
+  }
+
   render() {
-    const { item } = this.props
+    const { item } = this.props;
+    const { images } = this.state;
     return(
       <ItemContainer>
         <ItemHeader onClick={this.toggleItem}>
@@ -70,22 +94,20 @@ class MenuItem extends Component {
           </div>
         </ItemHeader>
         <ItemContent show={this.state.open}>
-          <ContentSidebar>
+          <ContentImageGrid>
+            {images && images.map(image => 
+              <MenuImage key={Math.random() * 100 + image.alt} image={image} />)}
+          </ContentImageGrid>
+          <ContentController>
             <div>
               <p>Would you like to add your own image?</p>
-              <input type="file" name="image" placeholder="Add an image" />
+              <ImageUploader handleImage={this.handleImage} />
             </div>
             <Availability available={item.availability}>
               <p>Is this listing accurate?</p>
               <button>Yes</button><button onClick={this.toggleSuggestionModal}>No</button>
             </Availability>
-          </ContentSidebar>
-          <ContentImageGrid>
-            {item.images && item.images.map(image => 
-              <ItemImage key={Math.random() * 100 + image.alt} src={image.src} alt={image.alt}>
-                <img src={image.src} alt={image.alt} />
-              </ItemImage>)}
-          </ContentImageGrid>
+          </ContentController>
         </ItemContent>
       </ItemContainer>
     );
